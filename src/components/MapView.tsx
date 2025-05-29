@@ -19,6 +19,10 @@ const MapView: FC = () => {
     setPoints(prev => prev.filter((_, i) => i !== idx))
   }
 
+  const handleMarkerDrag = (idx: number, newPos: Position) => {
+    setPoints(prev => prev.map((pt, i) => (i === idx ? newPos : pt)))
+  }
+
   return (
     <MapContainer
       center={DEFAULT_POSITION}
@@ -35,7 +39,11 @@ const MapView: FC = () => {
           weight={5}
         />
       )}
-      <MarkerLayer points={points} onMarkerClick={handleMarkerClick} />
+      <MarkerLayer
+        points={points}
+        onMarkerClick={handleMarkerClick}
+        onMarkerDrag={handleMarkerDrag}
+      />
       <MapClickHandler points={points} setPoints={setPoints} />
       <TileLayer
         attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
