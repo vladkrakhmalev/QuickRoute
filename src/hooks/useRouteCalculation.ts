@@ -2,8 +2,8 @@ import { useMemo } from 'react'
 import type { FeatureCollection, Position } from 'geojson'
 import {
   geojsonToGraph,
-  findNearestNode,
   findShortestPath,
+  findNearestNodes,
 } from '../utils/graph'
 
 export const useRouteCalculation = (
@@ -17,11 +17,19 @@ export const useRouteCalculation = (
     const from: [number, number] = [points[0][1], points[0][0]]
     const to: [number, number] = [points[1][1], points[1][0]]
 
-    const fromId = findNearestNode(graph, from)
-    const toId = findNearestNode(graph, to)
+    const N = 10 // количество ближайших вершин для перебора
+    const fromIds = findNearestNodes(graph, from, N)
+    const toIds = findNearestNodes(graph, to, N)
 
-    if (!fromId || !toId) return []
-
-    return findShortestPath(graph, fromId, toId)
+    for (const fromId of fromIds) {
+      for (const toId of toIds) {
+        if (!fromId || !toId) continue
+        const path = findShortestPath(graph, fromId, toId)
+        if (path.length > 0) {
+          return path
+        }
+      }
+    }
+    return []
   }, [geojson, points])
 }

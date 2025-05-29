@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useState, useMemo } from 'react'
 import { MapContainer, TileLayer, Polyline, GeoJSON } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useGeojson } from '../hooks/useGeojson'
@@ -8,12 +8,64 @@ import { MapClickHandler } from './MapClickHandler'
 import { DEFAULT_POSITION, DEFAULT_ZOOM } from '../data/consts'
 import { LatLngExpression } from 'leaflet'
 import type { Position } from 'geojson'
-import { useState } from 'react'
 
 const MapView: FC = () => {
   const [points, setPoints] = useState<Position[]>([])
-  const geojson = useGeojson('roads.geojson')
-  const route = useRouteCalculation(geojson, points)
+  const roadsData = useGeojson('roads.geojson')
+  const route = useRouteCalculation(roadsData, points)
+
+  const mainRoutePolyline = useMemo(() => {
+    if (route.length > 1) {
+      return (
+        <Polyline
+          positions={
+            route.map(([lng, lat]) => [lat, lng]) as LatLngExpression[]
+          }
+          color='red'
+          weight={5}
+        />
+      )
+    }
+    return null
+  }, [route])
+
+  const startConnector = useMemo(() => {
+    if (route.length > 0 && points.length > 0) {
+      return (
+        <Polyline
+          positions={
+            [
+              [points[0][0], points[0][1]],
+              [route[0][1], route[0][0]],
+            ] as LatLngExpression[]
+          }
+          color='blue'
+          weight={3}
+          dashArray='6 6'
+        />
+      )
+    }
+    return null
+  }, [route, points])
+
+  const endConnector = useMemo(() => {
+    if (route.length > 0 && points.length > 1) {
+      return (
+        <Polyline
+          positions={
+            [
+              [route.at(-1)![1], route.at(-1)![0]],
+              [points.at(-1)![0], points.at(-1)![1]],
+            ] as LatLngExpression[]
+          }
+          color='green'
+          weight={3}
+          dashArray='6 6'
+        />
+      )
+    }
+    return null
+  }, [route, points])
 
   const handleMarkerClick = (idx: number) => {
     setPoints(prev => prev.filter((_, i) => i !== idx))
@@ -29,16 +81,11 @@ const MapView: FC = () => {
       zoom={DEFAULT_ZOOM}
       style={{ height: '70vh', width: '100%' }}
     >
-      {geojson && <GeoJSON data={geojson} />}
-      {route.length > 1 && (
-        <Polyline
-          positions={
-            route.map(([lng, lat]) => [lat, lng]) as LatLngExpression[]
-          }
-          color='red'
-          weight={5}
-        />
-      )}
+      {roadsData && <GeoJSON data={roadsData} />}
+      {mainRoutePolyline}
+      {startConnector}
+      {endConnector}
+
       <MarkerLayer
         points={points}
         onMarkerClick={handleMarkerClick}

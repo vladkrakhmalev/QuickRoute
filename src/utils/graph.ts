@@ -83,6 +83,7 @@ export const geojsonToGraph = (geojson: FeatureCollection): Graph => {
 
       const distance = haversine(a, b)
       graph.setEdge(aId, bId, distance)
+      graph.setEdge(bId, aId, distance)
     }
   }
 
@@ -147,4 +148,24 @@ export const findShortestPath = (
   }
 
   return path.length > 1 ? path.reverse() : []
+}
+
+/**
+ * Находит N ближайших вершин графа к заданной точке
+ * @param graph - Граф для поиска
+ * @param point - Точка [широта, долгота]
+ * @param n - Количество ближайших вершин
+ * @returns Массив ID ближайших вершин
+ */
+export const findNearestNodes = (
+  graph: Graph,
+  point: Position,
+  n: number
+): string[] => {
+  return graph
+    .nodes()
+    .map(id => ({ id, dist: haversine(graph.node(id) as Position, point) }))
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, n)
+    .map(item => item.id)
 }
