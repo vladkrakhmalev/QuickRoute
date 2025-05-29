@@ -12,7 +12,7 @@ import { useState } from 'react'
 
 const MapView: FC = () => {
   const [points, setPoints] = useState<Position[]>([])
-  const geojson = useGeojson('/public/roads.geojson')
+  const geojson = useGeojson('roads.geojson')
   const route = useRouteCalculation(geojson, points)
 
   const handleMarkerClick = (idx: number) => {
